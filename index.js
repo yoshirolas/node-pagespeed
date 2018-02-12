@@ -20,13 +20,6 @@ console.log('third url: ' + arrUrls[2]);
 console.log(arrUrls.length);
 
 
-fs.open('./results/report.txt', 'a+', (err) => {
-  if (err) throw err;
-  console.log('CREATED REPORT FILE')
-});
-
-
-
 // const server = http.createServer((req, res) => {
 //   res.statusCode = 200;
 //   res.setHeader('Content-Type', 'text/plain');
@@ -39,30 +32,39 @@ fs.open('./results/report.txt', 'a+', (err) => {
 //   console.log(`Server running at http://${hostname}:${port}/`);
 // });
 
+for (let i = 0; i < arrUrls.length; i++) {
+  const url = arrUrls[i];
 
-const url = arrUrls[0];
+  https.get(
+    `https://www.googleapis.com/pagespeedonline/v4/runPagespeed?url=${url}`,
+    (res) => {
 
-https.get(
-  `https://www.googleapis.com/pagespeedonline/v4/runPagespeed?url=${arrUrls[0]}`,
-  (res) => {
+    console.log('Status: ' + res.statusCode);
 
-  console.log('Status: ' + res.statusCode);
+    let info = '';
 
-  let info = '';
-
-  res.on('data', (data) => {
-    // process.stdout.write(d);
-    info += Buffer.from(data).toString('utf8');
-  });
-
-  res.on('end', () => {
-    // console.log(info);
-    fs.writeFile('./results/report.txt', `${info}`, (err) => {
-      if (err) throw error; 
-      console.log("THE RESULTS WERE WRITTEN TO THE FILE");
+    res.on('data', (data) => {
+      // process.stdout.write(d);
+      info += Buffer.from(data).toString('utf8');
     });
-  });
 
-}).on('error', (e) => {
-  console.error(e);
-});
+    res.on('end', () => {
+      // console.log(info);
+      fs.open(`./results/report${i}.txt`, 'a+', (err) => {
+        if (err) throw err;
+        console.log('CREATED REPORT FILE')
+      });
+
+      fs.writeFile(`./results/report${i}.txt`, `${info}`, (err) => {
+        if (err) throw error; 
+        console.log("THE RESULTS WERE WRITTEN TO THE FILE");
+      });
+    });
+
+  }).on('error', (e) => {
+    console.error(e);
+  });
+}
+
+
+
